@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Охотники за тотемами: ПОД, НАД, ЗА</title>
+    <style>
+        :root { --p1-color: #e67e22; --p2-color: #f1c40f; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a2a1a; color: white; text-align: center; margin: 0; }
+        .header { background: #1e8449; padding: 15px; border-bottom: 4px solid #145a32; }
+        
+        /* Визуальные подсказки */
+        .hints-container { display: flex; justify-content: center; gap: 20px; margin: 15px auto; }
+        .hint-box { background: white; color: #333; padding: 10px; border-radius: 10px; width: 100px; }
+        .icon { height: 40px; border: 2px solid #333; margin-bottom: 5px; position: relative; display: flex; align-items: center; justify-content: center; font-weight: bold;}
+        .icon-pod::after { content: '●'; position: absolute; bottom: -10px; color: red; }
+        .icon-nad::after { content: '●'; position: absolute; top: -15px; color: red; }
+        .icon-za::after { content: '●'; position: absolute; right: -5px; bottom: -5px; color: red; opacity: 0.7; }
+
+        .game-area { display: flex; justify-content: center; gap: 40px; padding: 10px; }
+        .track { width: 90px; height: 450px; background: rgba(0,0,0,0.4); border-radius: 45px; position: relative; border: 3px solid #2ecc71; }
+        .player { font-size: 50px; position: absolute; bottom: 10px; left: 20px; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10; }
+        .finish-flag { position: absolute; top: 10px; left: 30px; font-size: 30px; }
+        
+        .quiz-card { background: #ecf0f1; color: #2c3e50; padding: 25px; width: 450px; border-radius: 25px; box-shadow: 0 12px 0 #bdc3c7; }
+        .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .btn { padding: 15px; font-size: 24px; cursor: pointer; border: none; border-radius: 15px; background: #27ae60; color: white; font-weight: bold; box-shadow: 0 6px 0 #1e8449; }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        #turn-info { font-size: 26px; margin: 15px 0; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🌴 Охотники за тотемами 🌴</h1>
+</div>
+
+<div class="hints-container">
+    <div class="hint-box"><div class="icon icon-pod">📦</div><b>ПОД</b></div>
+    <div class="hint-box"><div class="icon icon-nad">📦</div><b>НАД</b></div>
+    <div class="hint-box"><div class="icon icon-za">📦</div><b>ЗА</b></div>
+</div>
+
+<div id="turn-info">Нажмите кнопку ниже для старта</div>
+
+<div class="game-area">
+    <div>
+        <div class="track"><div class="finish-flag">🗿</div><div id="p1" class="player">🐯</div></div>
+        <p style="color:var(--p1-color); font-weight:bold;">ТИГРЫ</p>
+    </div>
+    
+    <div class="quiz-card">
+        <h2 id="question">Готовы к приключениям?</h2>
+        <div class="btn-group" id="controls">
+            <button class="btn" style="background:#e67e22; box-shadow: 0 6px 0 #d35400;" onclick="startGame()">НАЧАТЬ УРОК-ИГРУ</button>
+        </div>
+    </div>
+
+    <div>
+        <div class="track"><div class="finish-flag">🗿</div><div id="p2" class="player">🐆</div></div>
+        <p style="color:var(--p2-color); font-weight:bold;">ЛЕОПАРДЫ</p>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(f, type) {
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.frequency.setValueAtTime(f, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        o.start(); o.stop(audioCtx.currentTime + 0.3);
+    }
+
+    const questions = [
+        {t: "Тигры: Кот спрятался _ кресло.", a: "ЗА"},
+        {t: "Леопарды: Собака сидит _ дверью.", a: "ЗА"},
+        {t: "Тигры: Самолет летит _ облаками.", a: "НАД"},
+        {t: "Леопарды: Радуга раскинулась _ рекой.", a: "НАД"},
+        {t: "Тигры: Тапочки стоят _ кроватью.", a: "ПОД"},
+        {t: "Леопарды: Клад спрятан _ землей.", a: "ПОД"},
+        {t: "Тигры: Солнце зашло _ тучу.", a: "ЗА"},
+        {t: "Леопарды: Мяч закатился _ шкаф.", a: "ЗА"},
+        {t: "Тигры: Люстра висит _ столом.", a: "НАД"},
+        {t: "Леопарды: Флаг развевается _ башней.", a: "НАД"},
+        {t: "Тигры: Мышка живет _ полом.", a: "ПОД"},
+        {t: "Леопарды: Жук ползет _ корой.", a: "ПОД"},
+        {t: "Тигры: Забор стоит _ домом.", a: "ЗА"},
+        {t: "Леопарды: Садовник ушел _ сарай.", a: "ЗА"},
+        {t: "Тигры: Птица парит _ полем.", a: "НАД"},
+        {t: "Леопарды: Бабочка летает _ кустом.", a: "НАД"},
+        {t: "Тигры: Лодка проплыла _ мостом.", a: "ПОД"},
+        {t: "Леопарды: Ручей течет _ камнями.", a: "ПОД"},
+        {t: "Тигры: Мальчик заглянул _ угол.", a: "ЗА"},
+        {t: "Леопарды: Грузовик выехал _ поворот.", a: "ЗА"}
+    ];
+
+    let currentQ = 0, score1 = 0, score2 = 0;
+
+    function startGame() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        document.getElementById('controls').innerHTML = `
+            <button class="btn" onclick="answer('ПОД')">ПОД</button>
+            <button class="btn" onclick="answer('НАД')">НАД</button>
+            <button class="btn" onclick="answer('ЗА')">ЗА</button>
+        `;
+        render();
+    }
+
+    function render() {
+        if (currentQ >= questions.length) { finish(); return; }
+        document.getElementById('question').innerText = questions[currentQ].t;
+        let turn = currentQ % 2 === 0 ? "ТИГРЫ" : "ЛЕОПАРДЫ";
+        document.getElementById('turn-info').innerText = "Ход команды: " + turn;
+        document.getElementById('turn-info').style.color = currentQ % 2 === 0 ? "var(--p1-color)" : "var(--p2-color)";
+    }
+
+    function answer(val) {
+        if (val === questions[currentQ].a) {
+            playSound(800, 'correct');
+            if (currentQ % 2 === 0) {
+                score1++;
+                document.getElementById('p1').style.bottom = (10 + score1 * 40) + "px";
+            } else {
+                score2++;
+                document.getElementById('p2').style.bottom = (10 + score2 * 40) + "px";
+            }
+        } else {
+            playSound(200, 'wrong');
+            alert("Ошибка! Правильный ответ был: " + questions[currentQ].a);
+        }
+        currentQ++;
+        render();
+    }
+
+    function finish() {
+        let winMsg = score1 > score2 ? "ТИГРЫ ВЫИГРАЛИ!" : (score2 > score1 ? "ЛЕОПАРДЫ ВЫИГРАЛИ!" : "НИЧЬЯ!");
+        document.body.innerHTML = <div style="padding-top:150px;"><h1>🏁 ИГРА ОКОНЧЕНА!</h1><h2>${winMsg}</h2><p>Счет: ${score1} - ${score2}</p><button onclick="location.reload()" class="btn">ИГРАТЬ СНОВА</button></div>;
+    }
+</script>
+</body>
+</html>
