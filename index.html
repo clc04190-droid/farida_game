@@ -133,10 +133,17 @@
         render();
     }
 
-    function finish() {
-        let winMsg = score1 > score2 ? "ТИГРЫ ВЫИГРАЛИ!" : (score2 > score1 ? "ЛЕОПАРДЫ ВЫИГРАЛИ!" : "НИЧЬЯ!");
-        document.body.innerHTML = <div style="padding-top:150px;"><h1>🏁 ИГРА ОКОНЧЕНА!</h1><h2>${winMsg}</h2><p>Счет: ${score1} - ${score2}</p><button onclick="location.reload()" class="btn">ИГРАТЬ СНОВА</button></div>;
-    }
+   function finish() {
+    let winMsg = score1 > score2 ? "ТИГРЫ ВЫИГРАЛИ!" : (score2 > score1 ? "ЛЕОПАРДЫ ВЫИГРАЛИ!" : "НИЧЬЯ!");
+    
+    document.body.innerHTML = `
+    <div style="padding-top:150px;">
+        <h1>🏁 ИГРА ОКОНЧЕНА!</h1>
+        <h2>${winMsg}</h2>
+        <p>Счет: ${score1} - ${score2}</p>
+        <button onclick="location.reload()" class="btn">ИГРАТЬ СНОВА</button>
+    </div>`;
+}
 </script>
 </body>
 </html>
